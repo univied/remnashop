@@ -64,6 +64,9 @@ services:
           condition: service_healthy
         remnashop-redis:
           condition: service_healthy
+    
+    ports:
+      - "5000:5000"
 
     volumes:
       - ./logs:/opt/remnashop/logs
@@ -80,6 +83,8 @@ services:
     command: taskiq worker src.infrastructure.taskiq.worker:worker 
       --tasks-pattern src/infrastructure/taskiq/tasks -fsd
 
+    ports: []
+
     depends_on:
         remnashop-redis:
           condition: service_healthy
@@ -93,6 +98,8 @@ services:
     hostname: remnashop-taskiq-scheduler
     command: taskiq scheduler src.infrastructure.taskiq.scheduler:scheduler
       --tasks-pattern src/infrastructure/taskiq/tasks -fsd
+
+    ports: []
 
     depends_on:
         remnashop-redis:
