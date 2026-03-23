@@ -1,5 +1,6 @@
 from typing import Union
 
+from aiohttp import BasicAuth
 from pydantic import SecretStr, field_validator
 from pydantic_core.core_schema import FieldValidationInfo
 
@@ -15,6 +16,9 @@ class BotConfig(BaseConfig, env_prefix="BOT_"):
     dev_id: int
     support_username: SecretStr
     mini_app: Union[bool, SecretStr] = False
+    mtproxy_host: str = ""
+    mtproxy_port: int = 443
+    mtproxy_secret: SecretStr = SecretStr("")
 
     reset_webhook: bool = False
     drop_pending_updates: bool = False
@@ -39,6 +43,19 @@ class BotConfig(BaseConfig, env_prefix="BOT_"):
                 return value
         return False
 
+    @property
+    def is_mtproxy_enabled(self) -> bool:
+        return bool(self.mtproxy_host.strip() and self.mtproxy_secret.get_secret_value().strip())
+
+    @property
+    def mtproxy(self) -> tuple[str, BasicAuth] | None:
+        if not self.is_mtproxy_enabled:
+            return None
+
+        proxy_url = f"http://{self.mtproxy_host.strip()}:{self.mtproxy_port}"
+        proxy_auth = BasicAuth(login="mtproxy", password=self.mtproxy_secret.get_secret_value())
+        return (proxy_url, proxy_auth)
+
     def webhook_url(self, domain: SecretStr) -> SecretStr:
         url = f"https://{domain.get_secret_value()}{self.webhook_path}"
         return SecretStr(url)
@@ -50,6 +67,13 @@ class BotConfig(BaseConfig, env_prefix="BOT_"):
     @classmethod
     def validate_bot_fields(cls, field: object, info: FieldValidationInfo) -> object:
         validate_not_change_me(field, info)
+        return field
+
+    @field_validator("mtproxy_secret")
+    @classmethod
+    def validate_bot_mtproxy_secret(cls, field: SecretStr, info: FieldValidationInfo) -> SecretStr:
+        if field.get_secret_value().strip():
+            validate_not_change_me(field, info)
         return field
 
     @field_validator("support_username")
