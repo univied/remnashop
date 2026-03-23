@@ -19,8 +19,8 @@ class BotProvider(Provider):
     @provide
     async def get_bot(self, config: AppConfig) -> AsyncIterable[Bot]:
         logger.debug("Initializing Bot instance")
-        mtproxy = config.bot.mtproxy
-        session = AiohttpSession(proxy=mtproxy) if mtproxy else AiohttpSession()
+        proxy_url = config.bot.proxy_url
+        session = AiohttpSession(proxy=proxy_url) if proxy_url else AiohttpSession()
 
         async with Bot(
             token=config.bot.token.get_secret_value(),

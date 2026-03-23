@@ -1,7 +1,7 @@
-from typing import Union
+from typing import Self, Union
+from urllib.parse import quote
 
-from aiohttp import BasicAuth
-from pydantic import SecretStr, field_validator
+from pydantic import SecretStr, field_validator, model_validator
 from pydantic_core.core_schema import FieldValidationInfo
 
 from src.core.constants import API_V1, BOT_WEBHOOK_PATH, URL_PATTERN
@@ -16,9 +16,10 @@ class BotConfig(BaseConfig, env_prefix="BOT_"):
     dev_id: int
     support_username: SecretStr
     mini_app: Union[bool, SecretStr] = False
-    mtproxy_host: str = ""
-    mtproxy_port: int = 443
-    mtproxy_secret: SecretStr = SecretStr("")
+    proxy_host: str = ""
+    proxy_port: int = 1080
+    proxy_username: SecretStr = SecretStr("")
+    proxy_password: SecretStr = SecretStr("")
 
     reset_webhook: bool = False
     drop_pending_updates: bool = False
@@ -44,17 +45,23 @@ class BotConfig(BaseConfig, env_prefix="BOT_"):
         return False
 
     @property
-    def is_mtproxy_enabled(self) -> bool:
-        return bool(self.mtproxy_host.strip() and self.mtproxy_secret.get_secret_value().strip())
+    def is_proxy_enabled(self) -> bool:
+        return bool(self.proxy_host.strip())
 
     @property
-    def mtproxy(self) -> tuple[str, BasicAuth] | None:
-        if not self.is_mtproxy_enabled:
+    def proxy_url(self) -> str | None:
+        if not self.is_proxy_enabled:
             return None
 
-        proxy_url = f"http://{self.mtproxy_host.strip()}:{self.mtproxy_port}"
-        proxy_auth = BasicAuth(login="mtproxy", password=self.mtproxy_secret.get_secret_value())
-        return (proxy_url, proxy_auth)
+        host = self.proxy_host.strip()
+        username = self.proxy_username.get_secret_value().strip()
+        password = self.proxy_password.get_secret_value().strip()
+
+        if username and password:
+            auth = f"{quote(username, safe='')}:{quote(password, safe='')}@"
+            return f"socks5://{auth}{host}:{self.proxy_port}"
+
+        return f"socks5://{host}:{self.proxy_port}"
 
     def webhook_url(self, domain: SecretStr) -> SecretStr:
         url = f"https://{domain.get_secret_value()}{self.webhook_path}"
@@ -69,12 +76,29 @@ class BotConfig(BaseConfig, env_prefix="BOT_"):
         validate_not_change_me(field, info)
         return field
 
-    @field_validator("mtproxy_secret")
+    @field_validator("proxy_password")
     @classmethod
-    def validate_bot_mtproxy_secret(cls, field: SecretStr, info: FieldValidationInfo) -> SecretStr:
+    def validate_bot_proxy_password(cls, field: SecretStr, info: FieldValidationInfo) -> SecretStr:
         if field.get_secret_value().strip():
             validate_not_change_me(field, info)
         return field
+
+    @field_validator("proxy_username")
+    @classmethod
+    def validate_bot_proxy_username(cls, field: SecretStr, info: FieldValidationInfo) -> SecretStr:
+        if field.get_secret_value().strip():
+            validate_not_change_me(field, info)
+        return field
+
+    @model_validator(mode="after")
+    def validate_proxy_auth_pair(self) -> Self:
+        has_username = bool(self.proxy_username.get_secret_value().strip())
+        has_password = bool(self.proxy_password.get_secret_value().strip())
+
+        if has_username != has_password:
+            raise ValueError("BOT_PROXY_USERNAME and BOT_PROXY_PASSWORD must be set together")
+
+        return self
 
     @field_validator("support_username")
     @classmethod
