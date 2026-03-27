@@ -318,6 +318,61 @@ async def on_discount_input(
 
 
 @inject
+async def on_purchase_discount_select(
+    callback: CallbackQuery,
+    widget: Select[int],
+    dialog_manager: DialogManager,
+    selected_discount: int,
+    user_service: FromDishka[UserService],
+) -> None:
+    user: UserDto = dialog_manager.middleware_data[USER_KEY]
+    logger.info(f"{log(user)} Selected purchase discount '{selected_discount}'")
+    target_telegram_id = dialog_manager.dialog_data["target_telegram_id"]
+    target_user = await user_service.get(telegram_id=target_telegram_id)
+
+    if not target_user:
+        raise ValueError(f"User '{target_telegram_id}' not found")
+
+    target_user.purchase_discount = selected_discount
+    await user_service.update(user=target_user)
+    logger.info(
+        f"{log(user)} Changed purchase discount to '{selected_discount}' "
+        f"for '{target_telegram_id}'"
+    )
+    await dialog_manager.switch_to(state=DashboardUser.MAIN)
+
+
+@inject
+async def on_purchase_discount_input(
+    message: Message,
+    widget: MessageInput,
+    dialog_manager: DialogManager,
+    user_service: FromDishka[UserService],
+    notification_service: FromDishka[NotificationService],
+) -> None:
+    dialog_manager.show_mode = ShowMode.EDIT
+    user: UserDto = dialog_manager.middleware_data[USER_KEY]
+    target_telegram_id = dialog_manager.dialog_data["target_telegram_id"]
+    target_user = await user_service.get(telegram_id=target_telegram_id)
+
+    if not target_user:
+        raise ValueError(f"User '{target_telegram_id}' not found")
+
+    if message.text is None or not (message.text.isdigit() and 0 <= int(message.text) <= 100):
+        await notification_service.notify_user(
+            user=user,
+            payload=MessagePayload(i18n_key="ntf-user-invalid-number"),
+        )
+        return
+
+    number = int(message.text)
+    target_user.purchase_discount = number
+    await user_service.update(user=target_user)
+    logger.info(f"{log(user)} Changed purchase discount to '{number}' for '{target_telegram_id}'")
+    await dialog_manager.switch_to(state=DashboardUser.MAIN)
+
+
+@inject
 async def on_points_input(
     message: Message,
     widget: MessageInput,

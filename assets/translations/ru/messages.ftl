@@ -68,7 +68,7 @@ msg-menu-invite =
     <b>👥 Пригласить друзей</b>
     
     Делитесь вашей уникальной ссылкой и получайте вознаграждение в виде { $reward_type ->
-        [POINTS] <b>баллов, которые можно обменять на подписку или реальные деньги</b>
+        [POINTS] <b>реферального баланса (рубли), который можно вывести или обменять на подписку</b>
         [EXTRA_DAYS] <b>бесплатных дней к вашей подписке</b>
         *[OTHER] { $reward_type }
     }!
@@ -78,7 +78,7 @@ msg-menu-invite =
     👥 Всего приглашенных: { $referrals }
     💳 Платежей по вашей ссылке: { $payments }
     { $reward_type -> 
-    [POINTS] 💎 Ваши баллы: { $points }
+    [POINTS] 💎 Ваш реферальный баланс: { $points } ₽
     *[EXTRA_DAYS] { empty }
     }
     </blockquote>
@@ -116,7 +116,7 @@ msg-menu-invite-about =
         *[OTHER] { $reward_type }
     }
     [PERCENT] { $reward_type ->
-        [POINTS] <i>(Процент баллов от стоимости их приобретенной подписки)</i>
+        [POINTS] <i>(Процент реферального баланса (₽) от стоимости их приобретенной подписки)</i>
         [EXTRA_DAYS] <i>(Процент доп. дней от их приобретенной подписки)</i>
         *[OTHER] { $reward_type }
     }
@@ -126,11 +126,7 @@ msg-menu-invite-about =
 
 msg-invite-reward = { $value }{ $reward_strategy_type ->
     [AMOUNT] { $reward_type ->
-        [POINTS] { space }{ $value -> 
-            [one] балл
-            [few] балла
-            *[more] баллов 
-            }
+        [POINTS] { space }{ $value } ₽
         [EXTRA_DAYS] { space }доп. { $value -> 
             [one] день
             [few] дня
@@ -139,7 +135,7 @@ msg-invite-reward = { $value }{ $reward_strategy_type ->
         *[OTHER] { $reward_type }
     }
     [PERCENT] % { $reward_type ->
-        [POINTS] баллов
+        [POINTS] реферального баланса (₽)
         [EXTRA_DAYS] доп. дней
         *[OTHER] { $reward_type }
     }
@@ -469,10 +465,15 @@ msg-user-discount =
 
     Выберите по кнопке или введите свой вариант.
 
-msg-user-points =
-    <b>💎 Изменить баллы реферальной системы</b>
+msg-user-purchase-discount =
+    <b>🧾 Изменить скидку на одну покупку</b>
 
-    <b>Текущее кол-во баллов: { $current_points }</b>
+    Выберите по кнопке или введите свой вариант.
+
+msg-user-points =
+    <b>💎 Изменить реферальный баланс (рубли)</b>
+
+    <b>Текущий реферальный баланс: { $current_points } ₽</b>
 
     Выберите по кнопке или введите свой вариант, чтобы добавить или отнять.
 
@@ -732,11 +733,7 @@ msg-referral-reward-strategy =
 
 msg-referral-reward-level = { $level } уровень: { $value }{ $reward_strategy_type ->
     [AMOUNT] { $reward_type ->
-        [POINTS] { space }{ $value -> 
-            [one] балл
-            [few] балла
-            *[more] баллов
-            }
+        [POINTS] { space }{ $value } ₽
         [EXTRA_DAYS] { space }доп. { $value -> 
             [one] день
             [few] дня
@@ -745,7 +742,7 @@ msg-referral-reward-level = { $level } уровень: { $value }{ $reward_strat
         *[OTHER] { $reward_type }
     }
     [PERCENT] % { $reward_type ->
-        [POINTS] баллов
+        [POINTS] реферального баланса (₽)
         [EXTRA_DAYS] доп. дней
         *[OTHER] { $reward_type }
     }
@@ -761,7 +758,7 @@ msg-referral-reward =
 
     { $reward_strategy_type ->
         [AMOUNT] Введите количество { $reward_type ->
-            [POINTS] баллов
+            [POINTS] рублей
             [EXTRA_DAYS] дней
             *[OTHER] { $reward_type }
         }

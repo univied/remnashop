@@ -46,7 +46,7 @@ btn-menu-invite-about = ❓ Подробнее о награде
 btn-menu-invite-copy = 🔗 Скопировать ссылку
 btn-menu-invite-send = 📩 Пригласить
 btn-menu-invite-qr = 🧾 QR-код
-btn-menu-invite-withdraw-points = 💎 Обменять баллы
+btn-menu-invite-withdraw-points = 💎 Вывести реферальный баланс
 btn-menu-support = 🆘 Поддержка
 btn-menu-dashboard = 🛠 Панель управления
 
@@ -96,7 +96,9 @@ btn-users-unblock-all = 🔓 Разблокировать всех
 
 # User
 btn-user-discount = 💸 Изменить скидку
-btn-user-points = 💎 Изменить баллы
+btn-user-personal-discount = 💸 Персональная скидка
+btn-user-purchase-discount = 🧾 Скидка на 1 покупку
+btn-user-points = 💎 Изменить реферальный баланс
 btn-user-statistics = 📊 Статистика
 btn-user-message = 📩 Сообщение
 btn-user-role = 👮‍♂️ Изменить роль
@@ -268,7 +270,7 @@ btn-referral-level-choice = { $type ->
     }
 
 btn-referral-reward-choice = { $type -> 
-    [POINTS] 💎 Баллы
+    [POINTS] 💎 Реферальный баланс (₽)
     [EXTRA_DAYS] ⏳ Дни
     *[OTHER] { $type }
     }

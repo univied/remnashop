@@ -54,6 +54,8 @@ from .handlers import (
     on_devices,
     on_discount_input,
     on_discount_select,
+    on_purchase_discount_input,
+    on_purchase_discount_select,
     on_duration_input,
     on_duration_select,
     on_external_squad_select,
@@ -127,10 +129,17 @@ user = Window(
     ),
     Row(
         SwitchTo(
-            text=I18nFormat("btn-user-discount"),
+            text=I18nFormat("btn-user-personal-discount"),
             id="discount",
             state=DashboardUser.DISCOUNT,
         ),
+        SwitchTo(
+            text=I18nFormat("btn-user-purchase-discount"),
+            id="purchase_discount",
+            state=DashboardUser.PURCHASE_DISCOUNT,
+        ),
+    ),
+    Row(
         SwitchTo(
             text=I18nFormat("btn-user-points"),
             id="points",
@@ -639,6 +648,33 @@ discount = Window(
     getter=discount_getter,
 )
 
+purchase_discount = Window(
+    Banner(BannerName.DASHBOARD),
+    I18nFormat("msg-user-purchase-discount"),
+    Group(
+        Select(
+            text=Format("{item}%"),
+            id="purchase_discount_select",
+            item_id_getter=lambda item: item,
+            items="percentages",
+            type_factory=int,
+            on_click=on_purchase_discount_select,
+        ),
+        width=3,
+    ),
+    Row(
+        SwitchTo(
+            text=I18nFormat("btn-back"),
+            id="back",
+            state=DashboardUser.MAIN,
+        ),
+    ),
+    MessageInput(func=on_purchase_discount_input),
+    IgnoreUpdate(),
+    state=DashboardUser.PURCHASE_DISCOUNT,
+    getter=discount_getter,
+)
+
 points = Window(
     Banner(BannerName.DASHBOARD),
     I18nFormat("msg-user-points"),
@@ -738,6 +774,7 @@ router = Dialog(
     transaction,
     message,
     discount,
+    purchase_discount,
     points,
     give_access,
     role,

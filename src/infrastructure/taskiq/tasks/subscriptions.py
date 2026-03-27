@@ -134,6 +134,7 @@ async def purchase_subscription_task(
     remnawave_service: FromDishka[RemnawaveService],
     subscription_service: FromDishka[SubscriptionService],
     transaction_service: FromDishka[TransactionService],
+    user_service: FromDishka[UserService],
     notification_service: FromDishka[NotificationService],
 ) -> None:
     purchase_type = transaction.purchase_type
@@ -218,6 +219,11 @@ async def purchase_subscription_task(
             raise Exception(
                 f"Unknown purchase type '{purchase_type}' for user '{user.telegram_id}'"
             )
+
+        if user.purchase_discount > 0:
+            user.purchase_discount = 0
+            await user_service.update(user)
+            logger.info(f"One-time purchase discount consumed for user '{user.telegram_id}'")
 
         await redirect_to_successed_payment_task.kiq(user, purchase_type)
         logger.info(f"Purchase subscription task completed for user '{user.telegram_id}'")

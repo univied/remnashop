@@ -18,7 +18,7 @@ unit-unlimited = { $value ->
 payment-invoice-description = { purchase-type } подписки { $name } на { $duration }
 contact-support-help = Здравствуйте! Мне нужна помощь.
 contact-support-paysupport = Здравствуйте! Я бы хотел запросить возврат средств.
-contact-support-withdraw-points = Здравствуйте! Я бы хотел запросить обмен баллов.
+contact-support-withdraw-points = Здравствуйте! Я бы хотел запросить вывод реферального баланса.
 cmd-start = Перезапустить бота
 cmd-paysupport = Возврат средств
 cmd-help = Помощь
@@ -76,7 +76,7 @@ frg-user-details =
     • <b>Роль</b>: { role }
     • <b>Язык</b>: { language }
     { $show_points ->
-    [1] • <b>Баллы</b>: { $points }
+    [1] • <b>Реферальный баланс</b>: { $points } ₽
     *[0] { empty }
     }
     </blockquote>
@@ -335,7 +335,7 @@ traffic-strategy = { $strategy_type ->
     }
 
 reward-type = { $reward_type -> 
-    [POINTS] Баллы
+    [POINTS] Реферальный баланс (рубли)
     [EXTRA_DAYS] Дни
     *[OTHER] { $reward_type }
     }

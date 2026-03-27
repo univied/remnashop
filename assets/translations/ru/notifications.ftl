@@ -288,11 +288,7 @@ ntf-event-user-referral-reward =
     
     <blockquote>
     Пользователь <b>{ $name }</b> совершил платеж. Вы получили <b>{ $value } { $reward_type ->
-    [POINTS] { $value -> 
-        [one] балл
-        [few] балла
-        *[more] баллов 
-        }
+    [POINTS] ₽
     [EXTRA_DAYS] доп. { $value -> 
         [one] день
         [few] дня
@@ -327,7 +323,7 @@ ntf-double-click-confirm = <i>⚠️ Нажмите еще раз, чтобы п
 ntf-channel-join-error = <i>⚠️ Мы не видим вашу подписку на канал. Проверьте, что вы подписались, и попробуйте еще раз.</i>
 ntf-throttling-many-requests = <i>⚠️ Вы отправляете слишком много запросов, пожалуйста, подождите немного.</i>
 ntf-squads-empty = <i>⚠️ Сквады не найдены. Проверьте их наличие в панели.</i>
-ntf-invite-withdraw-points-error = ❌ У вас недостаточно баллов для выполнения обмена.
+ntf-invite-withdraw-points-error = ❌ У вас недостаточно реферального баланса для вывода.
 
 ntf-connect-not-available =
     ⚠️ { $status ->
@@ -369,8 +365,8 @@ ntf-user-invalid-expire-time = <i>❌ Невозможно { $operation ->
     }.</i>
 
 ntf-user-invalid-points = <i>❌ Невозможно { $operation ->
-    [ADD] добавить указанное количество баллов
-    *[SUB] отнять указанное количество баллов
+    [ADD] добавить указанную сумму к реферальному балансу
+    *[SUB] отнять указанную сумму из реферального баланса
     }.</i>
 
 ntf-referral-invalid-reward = <i>❌ Некорректное значение.</i>
