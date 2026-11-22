@@ -11,9 +11,11 @@ on:
   push:
     branches:
       - feat/remnawave-3x
-    tags:
-      - "3x-*"
   workflow_dispatch:
+
+concurrency:
+  group: remnashop-3x-image
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -93,10 +95,7 @@ jobs:
           IMAGE="ghcr.io/${OWNER}/${REPO,,}"
           SHORT_SHA=$(git rev-parse --short HEAD)
 
-          TAGS="${IMAGE}:3x,${IMAGE}:3x-${SHORT_SHA}"
-          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
-            TAGS="${TAGS},${IMAGE}:${GITHUB_REF_NAME}"
-          fi
+          TAGS="${IMAGE}:3x"
 
           # The app compares its build tag against upstream releases once an
           # hour, so it has to be a real version. "<upstream release>+3x" is
