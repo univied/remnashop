@@ -355,6 +355,7 @@ gateway-type = { $gateway_type ->
     [URLPAY] UrlPay
     [WATA] WATA
     [VALUTIX] Valutix
+    [ANORE] Anore
     *[OTHER] { $gateway_type }
 }
 

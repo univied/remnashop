@@ -33,6 +33,7 @@ from src.application.dto import (
     ResetFeatureSettingsDto,
 )
 from src.application.dto.payment_gateway import (
+    AnoreGatewaySettingsDto,
     CryptomusGatewaySettingsDto,
     CryptoPayGatewaySettingsDto,
     FreeKassaGatewaySettingsDto,
@@ -117,6 +118,7 @@ class RetortProvider(Provider):
                 PaymentGatewayType.URLPAY: UrlPayGatewaySettingsDto,
                 PaymentGatewayType.VALUTIX: ValutixGatewaySettingsDto,
                 PaymentGatewayType.WATA: WataGatewaySettingsDto,
+                PaymentGatewayType.ANORE: AnoreGatewaySettingsDto,
             }
 
             dto_class = type_mapping.get(pg_type)
@@ -172,6 +174,7 @@ class RetortProvider(Provider):
                         UrlPayGatewaySettingsDto,
                         ValutixGatewaySettingsDto,
                         WataGatewaySettingsDto,
+                        AnoreGatewaySettingsDto,
                     ]
                 ],
             ]

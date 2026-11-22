@@ -172,7 +172,34 @@ class ValutixGatewaySettingsDto(GatewaySettingsDto):
         return self.api_key is not None
 
 
+@dataclass(kw_only=True)
+class AnoreGatewaySettingsDto(GatewaySettingsDto):
+    type: Literal[PaymentGatewayType.ANORE] = PaymentGatewayType.ANORE
+    shop_id: Optional[int] = None
+    api_key: Optional[SecretStr] = None
+    secret_key: Optional[SecretStr] = None
+    h2h_enabled: bool = False
+    franchise_type: Optional[str] = None
+    franchise_address: Optional[str] = None
+    franchise_owner_telegram_id: Optional[str] = None
+    franchise_owner_telegram_username: Optional[str] = None
+
+    @property
+    def is_configured(self) -> bool:
+        if not self.shop_id or self.shop_id < 1 or not self.api_key or not self.secret_key:
+            return False
+        franchise_required = (
+            self.franchise_type,
+            self.franchise_address,
+            self.franchise_owner_telegram_id,
+        )
+        if any(franchise_required) or self.franchise_owner_telegram_username:
+            return all(franchise_required)
+        return True
+
+
 AnyGatewaySettingsDto = Union[
+    AnoreGatewaySettingsDto,
     TelegramStarsGatewaySettingsDto,
     YooKassaGatewaySettingsDto,
     YooMoneyGatewaySettingsDto,

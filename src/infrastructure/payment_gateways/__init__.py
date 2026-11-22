@@ -1,3 +1,4 @@
+from .anore import AnoreGateway
 from .base import BasePaymentGateway, PaymentGatewayFactory
 from .cryptomus import CryptomusGateway
 from .cryptopay import CryptoPayGateway
@@ -15,6 +16,7 @@ from .yookassa import YookassaGateway
 from .yoomoney import YoomoneyGateway
 
 __all__ = [
+    "AnoreGateway",
     "BasePaymentGateway",
     "PaymentGatewayFactory",
     "CryptomusGateway",

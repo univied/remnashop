@@ -6,6 +6,7 @@ from dishka.integrations.aiogram_dialog import inject
 
 from src.application.common.dao import PaymentGatewayDao, SettingsDao
 from src.application.dto import PaymentGatewayDto
+from src.application.dto.payment_gateway import AnoreGatewaySettingsDto
 from src.core.config import AppConfig
 from src.core.enums import Currency
 
@@ -50,13 +51,20 @@ async def gateway_getter(
 
     settings = gateway.settings.as_list
     display_name_field = [s for s in settings if s["field"] == "display_name"]
-    other_settings = [s for s in settings if s["field"] != "display_name"]
+    other_settings = [s for s in settings if s["field"] not in {"display_name", "h2h_enabled"}]
+    is_anore = isinstance(gateway.settings, AnoreGatewaySettingsDto)
 
     return {
         "id": gateway.id,
         "gateway_type": gateway.type,
         "is_active": gateway.is_active,
         "display_name_field": display_name_field,
+        "is_anore": is_anore,
+        "h2h_enabled": (
+            gateway.settings.h2h_enabled
+            if isinstance(gateway.settings, AnoreGatewaySettingsDto)
+            else False
+        ),
         "settings": other_settings,
         "webhook": config.get_webhook(gateway.type),
         "requires_webhook": gateway.requires_webhook,

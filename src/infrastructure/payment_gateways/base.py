@@ -44,6 +44,11 @@ class BasePaymentGateway(ABC):
     @abstractmethod
     async def handle_create_payment(self, amount: Decimal, details: str) -> PaymentResultDto: ...
 
+    async def create_payment_for_user(
+        self, amount: Decimal, details: str, user: UserDto, *, is_test: bool = False
+    ) -> PaymentResultDto:
+        return await self.handle_create_payment(amount, details)
+
     @abstractmethod
     async def handle_webhook(
         self,

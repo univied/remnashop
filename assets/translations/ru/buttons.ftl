@@ -394,6 +394,10 @@ btn-gateway =
     .default-currency = 💸 Валюта по умолчанию
     .placement = 🔢 Изменить позиционирование
     .field-reset = ♻️ Сбросить значение
+    .h2h-toggle = { $is_active ->
+    [1] 🟢 H2H_ENABLED
+    *[0] ⚪ H2H_ENABLED
+    }
 
     .active-toggle = { $is_active ->
     [1] 🟢 Включено

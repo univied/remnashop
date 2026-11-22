@@ -7,7 +7,7 @@ from adaptix import Retort
 from adaptix.conversion import ConversionRetort
 from loguru import logger
 from redis.asyncio import Redis
-from sqlalchemy import and_, case, func, select, update
+from sqlalchemy import and_, case, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.common.dao import TransactionDao
@@ -163,12 +163,20 @@ class TransactionDaoImpl(TransactionDao):
         return is_exists
 
     async def cancel_old(self, minutes: int = 30) -> int:
-        threshold = datetime_now() - timedelta(minutes=minutes)
+        now = datetime_now()
+        threshold = now - timedelta(minutes=minutes)
+        anore_threshold = now - timedelta(minutes=max(minutes, 240))
 
         stmt = (
             update(Transaction)
             .where(Transaction.status == TransactionStatus.PENDING)
-            .where(Transaction.created_at < threshold)
+            .where(
+                or_(
+                    Transaction.gateway_type != PaymentGatewayType.ANORE,
+                    Transaction.created_at < anore_threshold,
+                ),
+                Transaction.created_at < threshold,
+            )
             .values(status=TransactionStatus.CANCELED)
         )
         result = await self.session.execute(stmt)

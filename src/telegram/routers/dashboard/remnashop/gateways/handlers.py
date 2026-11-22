@@ -9,6 +9,7 @@ from loguru import logger
 from src.application.common import Notifier
 from src.application.common.dao import PaymentGatewayDao
 from src.application.dto import MessagePayloadDto, TelegramUserDto
+from src.application.dto.payment_gateway import AnoreGatewaySettingsDto
 from src.application.use_cases.gateways.commands.configuration import (
     MovePaymentGatewayUp,
     ResetPaymentGatewaySettingsDto,
@@ -107,6 +108,29 @@ async def on_active_toggle(
         await notifier.notify_user(user, i18n_key="ntf-gateway.not-configured")
 
 
+@inject
+async def on_anore_h2h_toggle(
+    callback: CallbackQuery,
+    widget: Button,
+    dialog_manager: DialogManager,
+    payment_gateway_dao: FromDishka[PaymentGatewayDao],
+    update_payment_gateway_settings: FromDishka[UpdatePaymentGatewaySettings],
+) -> None:
+    user: TelegramUserDto = dialog_manager.middleware_data[USER_KEY]
+    gateway_id = dialog_manager.dialog_data["gateway_id"]
+    gateway = await payment_gateway_dao.get_by_id(gateway_id)
+
+    if gateway and isinstance(gateway.settings, AnoreGatewaySettingsDto):
+        await update_payment_gateway_settings(
+            user,
+            UpdatePaymentGatewaySettingsDto(
+                gateway_id=gateway_id,
+                field_name="h2h_enabled",
+                value=not gateway.settings.h2h_enabled,
+            ),
+        )
+
+
 async def on_field_select(
     callback: CallbackQuery,
     widget: Select,
@@ -172,9 +196,7 @@ async def on_field_reset(
         ResetPaymentGatewaySettingsDto(gateway_id=gateway_id, field_name=selected_field),
     )
 
-    i18n_key = (
-        "ntf-gateway.field-reset-deactivated" if deactivated else "ntf-gateway.field-reset"
-    )
+    i18n_key = "ntf-gateway.field-reset-deactivated" if deactivated else "ntf-gateway.field-reset"
     await notifier.notify_user(user, i18n_key=i18n_key)
     await dialog_manager.switch_to(state=RemnashopGateways.SETTINGS)
 

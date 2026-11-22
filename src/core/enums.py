@@ -96,6 +96,7 @@ class PaymentGatewayType(UpperStrEnum):
     ROBOKASSA = auto()
     URLPAY = auto()
     WATA = auto()
+    ANORE = auto()
 
 
 class PurchaseType(UpperStrEnum):
@@ -322,6 +323,7 @@ class Currency(UpperStrEnum):
             PaymentGatewayType.ROBOKASSA: cls.RUB,
             PaymentGatewayType.URLPAY: cls.RUB,
             PaymentGatewayType.WATA: cls.RUB,
+            PaymentGatewayType.ANORE: cls.RUB,
             PaymentGatewayType.VALUTIX: cls.RUB,
         }
 

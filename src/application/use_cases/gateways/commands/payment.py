@@ -29,6 +29,7 @@ from src.application.dto import (
     UserDto,
 )
 from src.application.dto.payment_gateway import (
+    AnoreGatewaySettingsDto,
     CryptomusGatewaySettingsDto,
     CryptoPayGatewaySettingsDto,
     FreeKassaGatewaySettingsDto,
@@ -105,6 +106,7 @@ class CreateDefaultPaymentGateway(Interactor[None, None]):
                     PaymentGatewayType.URLPAY: UrlPayGatewaySettingsDto,
                     PaymentGatewayType.VALUTIX: ValutixGatewaySettingsDto,
                     PaymentGatewayType.WATA: WataGatewaySettingsDto,
+                    PaymentGatewayType.ANORE: AnoreGatewaySettingsDto,
                 }
                 dto_class = settings_map.get(gateway_type)
                 settings = dto_class() if dto_class else None
@@ -222,9 +224,10 @@ class CreatePayment(Interactor[CreatePaymentDto, PaymentResultDto]):
 
         gateway_instance.payer = actor
         async with self.uow:
-            payment: PaymentResultDto = await gateway_instance.handle_create_payment(
+            payment: PaymentResultDto = await gateway_instance.create_payment_for_user(
                 amount=data.pricing.final_amount,
                 details=details,
+                user=actor,
             )
 
             transaction.payment_id = payment.id
@@ -260,9 +263,11 @@ class CreateTestPayment(Interactor[PaymentGatewayType, PaymentResultDto]):
         test_plan_snapshot = PlanSnapshotDto.test()
 
         gateway_instance.payer = actor
-        payment: PaymentResultDto = await gateway_instance.handle_create_payment(
+        payment: PaymentResultDto = await gateway_instance.create_payment_for_user(
             amount=test_pricing.final_amount,
             details=i18n.get("test-payment"),
+            user=actor,
+            is_test=True,
         )
 
         async with self.uow:
@@ -298,6 +303,12 @@ class ProcessPaymentDto:
 
 class ProcessPayment(Interactor[ProcessPaymentDto, None]):
     required_permission = None
+    _completion_sources = (TransactionStatus.PENDING, TransactionStatus.FAILED)
+    # A paid webhook can arrive after the local expiry cleanup.
+    _anore_completion_sources = (*_completion_sources, TransactionStatus.CANCELED)
+    _completion_sources_by_gateway = {
+        PaymentGatewayType.ANORE: _anore_completion_sources,
+    }
 
     def __init__(
         self,
@@ -364,10 +375,13 @@ class ProcessPayment(Interactor[ProcessPaymentDto, None]):
                 return
 
             elif new_status == TransactionStatus.COMPLETED:
+                allowed_statuses = self._completion_sources_by_gateway.get(
+                    data.gateway_type, self._completion_sources
+                )
                 updated = await self.transaction_dao.transition_status(
                     payment_id,
                     TransactionStatus.COMPLETED,
-                    (TransactionStatus.PENDING, TransactionStatus.FAILED),
+                    allowed_statuses,
                 )
                 if not updated:
                     logger.warning(

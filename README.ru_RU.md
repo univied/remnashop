@@ -25,3 +25,34 @@
     </a>
 </p>
 </div>
+## Оплата через Anore
+
+В панели бота откройте **RemnaShop → Платёжные шлюзы → Anore**. Укажите
+`SHOP_ID`, `API_KEY` и `SECRET_KEY` магазина для подписи вебхуков.
+Используйте `an_test_…` для тестового платежа из панели и `an_live_…`
+для покупок. Включите шлюз и проверьте, что Anore может обратиться к
+`https://<домен>/api/v1/payments/anore`. В Anore включите события
+`payment.succeeded` и `payment.expired`.
+
+При выключенном `H2H_ENABLED` покупатель получает ссылку на форму Anore.
+При включённом шлюз запрашивает оплату через СБП и выдаёт прямую ссылку
+`sbpUrl`, когда она есть в ответе Anore. Иначе открывается форма Anore. Доступность
+прямой ссылки управляется настройками магазина на стороне Anore.
+
+Для идентификации плательщика передаётся его Telegram ID и, если известен,
+Telegram username. Для покупателей без Telegram ID используется
+подтверждённый email.
+
+Если магазин работает в режиме франшизы, заполните данные филиала в настройках
+Anore в боте:
+
+- `FRANCHISE_TYPE` — `telegram_bot` или `website`.
+- `FRANCHISE_ADDRESS` — username бота филиала либо HTTPS origin сайта, например
+  `https://shop.example`.
+- `FRANCHISE_OWNER_TELEGRAM_ID` — Telegram ID владельца филиала.
+- `FRANCHISE_OWNER_TELEGRAM_USERNAME` — username владельца, если известен.
+
+Эти настройки относятся к конкретному экземпляру RemnaShop. Для обычного
+магазина оставьте все поля `FRANCHISE_*` пустыми.
+
+[Документация Anore](https://anore.cc/docs#create)

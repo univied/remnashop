@@ -89,7 +89,8 @@ jobs:
           # ghcr rejects upper-case repository names, and GitHub user names
           # frequently have them.
           OWNER=$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')
-          IMAGE="ghcr.io/${OWNER}/remnashop"
+          REPO="${GITHUB_REPOSITORY#*/}"
+          IMAGE="ghcr.io/${OWNER}/${REPO,,}"
           SHORT_SHA=$(git rev-parse --short HEAD)
 
           TAGS="${IMAGE}:3x,${IMAGE}:3x-${SHORT_SHA}"

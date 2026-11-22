@@ -14,8 +14,9 @@ import pytest
 from adaptix import Retort, loader
 from pydantic import SecretStr
 
-from src.application.dto import PaymentGatewayDto
+from src.application.dto import PaymentGatewayDto, UserDto
 from src.application.dto.payment_gateway import (
+    AnoreGatewaySettingsDto,
     CryptomusGatewaySettingsDto,
     HeleketGatewaySettingsDto,
     MulenPayGatewaySettingsDto,
@@ -24,6 +25,7 @@ from src.application.dto.payment_gateway import (
     WataGatewaySettingsDto,
 )
 from src.core.enums import Currency, PaymentGatewayType, TransactionStatus
+from src.infrastructure.payment_gateways.anore import AnoreGateway
 from src.infrastructure.payment_gateways.base import BasePaymentGateway
 from src.infrastructure.payment_gateways.cryptomus import CryptomusGateway
 from src.infrastructure.payment_gateways.heleket import HeleketGateway
@@ -300,3 +302,132 @@ async def test_mulenpay_family(cls: type, gateway_type: Any, settings_cls: type,
     hook["sign"] = sha1_sign("rub", "199.00", 7)
     result = await instance.handle_webhook(Request(json.dumps(hook).encode()))
     assert result[1] == TransactionStatus.COMPLETED
+
+
+@pytest.fixture
+def anore() -> Any:
+    return make(
+        AnoreGateway,
+        PaymentGatewayType.ANORE,
+        AnoreGatewaySettingsDto(
+            shop_id=42, api_key=SecretStr(KEY), secret_key=SecretStr("shop-secret")
+        ),
+    )
+
+
+@pytest.mark.parametrize(
+    ("enabled", "sbp_url", "direct"),
+    [
+        (False, "https://qr.nspk.ru/direct", False),
+        (True, "https://qr.nspk.ru/direct", True),
+        (True, None, False),
+    ],
+)
+async def test_anore_payer_and_h2h(enabled: bool, sbp_url: str | None, direct: bool) -> None:
+    gateway = make(
+        AnoreGateway,
+        PaymentGatewayType.ANORE,
+        AnoreGatewaySettingsDto(
+            shop_id=42,
+            api_key=SecretStr(KEY),
+            secret_key=SecretStr("shop-secret"),
+            h2h_enabled=enabled,
+        ),
+    )
+    checkout = "https://pay.anore.cc/checkout"
+    sent = record(
+        gateway,
+        {
+            "success": True,
+            "id": ORDER_ID,
+            "paymentUrl": checkout,
+            "sbpUrl": sbp_url,
+        },
+    )
+    result = await gateway.create_payment_for_user(
+        Decimal("12.34"),
+        "VPN",
+        UserDto(name="Buyer", telegram_id=123, username="buyer"),
+    )
+
+    (request,) = sent
+    assert request.url == "https://api.anore.cc/v1/payments"
+    assert request.headers["Authorization"] == f"Bearer {KEY}"
+    body = json.loads(request.content, parse_float=Decimal)
+    assert body["amount"] == Decimal("12.34")
+    assert body["shopId"] == 42
+    assert body["callbackUrl"] == "https://shop.example/api/v1/payments/anore"
+    assert body["user_identity"] == {
+        "type": "telegram_id",
+        "value": "123",
+        "telegram_username": "buyer",
+    }
+    assert "franchise" not in body
+    assert body.get("methods") == (["sbp"] if enabled else None)
+    assert result.id == ORDER_UUID
+    assert result.url == (sbp_url if direct else checkout)
+
+
+async def test_anore_verified_email_and_franchise() -> None:
+    gateway = make(
+        AnoreGateway,
+        PaymentGatewayType.ANORE,
+        AnoreGatewaySettingsDto(
+            shop_id=42,
+            api_key=SecretStr(KEY),
+            secret_key=SecretStr("shop-secret"),
+            franchise_type="telegram_bot",
+            franchise_address="@BranchBot",
+            franchise_owner_telegram_id="987",
+            franchise_owner_telegram_username="@BranchOwner",
+        ),
+    )
+    sent = record(
+        gateway,
+        {
+            "success": True,
+            "id": ORDER_ID,
+            "paymentUrl": "https://pay.anore.cc/checkout",
+        },
+    )
+    with pytest.raises(ValueError, match="verified email"):
+        await gateway.create_payment_for_user(
+            Decimal("12.34"),
+            "VPN",
+            UserDto(name="Buyer", email="buyer@example.com"),
+        )
+    assert sent == []
+    await gateway.create_payment_for_user(
+        Decimal("12.34"),
+        "VPN",
+        UserDto(name="Buyer", email="buyer@example.com", is_email_verified=True),
+    )
+    body = json.loads(sent[0].content)
+    assert body["user_identity"] == {"type": "email", "value": "buyer@example.com"}
+    assert body["franchise"] == {
+        "type": "telegram_bot",
+        "address": "branchbot",
+        "owner_telegram_id": "987",
+        "owner_telegram_username": "branchowner",
+    }
+
+
+@pytest.mark.parametrize(
+    ("event", "state", "expected"),
+    [
+        ("payment.succeeded", "paid", TransactionStatus.COMPLETED),
+        ("payment.expired", "expired", TransactionStatus.CANCELED),
+        ("payout.succeeded", "paid", None),
+    ],
+)
+async def test_anore_signed_webhook(
+    anore: Any, event: str, state: str, expected: TransactionStatus | None
+) -> None:
+    data = {"event": event, "id": ORDER_ID, "status": state}
+    body = json.dumps(data).encode()
+    signature = hmac.digest(b"shop-secret", body, "sha256").hex()
+    headers = {"Anore-Signature": signature}
+    with pytest.raises(PermissionError):
+        await anore.handle_webhook(Request(body + b" ", headers))
+    result = await anore.handle_webhook(Request(body, headers))
+    assert result == ((ORDER_UUID, expected) if expected else None)

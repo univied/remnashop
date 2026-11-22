@@ -10,6 +10,7 @@ from src.application.dto.payment_gateway import PaymentGatewayDto
 from src.core.config import AppConfig
 from src.core.enums import PaymentGatewayType
 from src.infrastructure.payment_gateways import (
+    AnoreGateway,
     BasePaymentGateway,
     CryptomusGateway,
     CryptoPayGateway,
@@ -43,6 +44,7 @@ GATEWAY_MAP: dict[PaymentGatewayType, Type[BasePaymentGateway]] = {
     PaymentGatewayType.URLPAY: UrlPayGateway,
     PaymentGatewayType.VALUTIX: ValutixGateway,
     PaymentGatewayType.WATA: WataGateway,
+    PaymentGatewayType.ANORE: AnoreGateway,
 }
 
 

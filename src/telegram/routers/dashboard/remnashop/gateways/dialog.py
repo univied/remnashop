@@ -29,6 +29,7 @@ from .getters import (
 )
 from .handlers import (
     on_active_toggle,
+    on_anore_h2h_toggle,
     on_default_currency_select,
     on_field_input,
     on_field_reset,
@@ -100,6 +101,12 @@ gateways = Window(
 gateway_settings = Window(
     Banner(BannerName.DASHBOARD),
     I18nFormat("msg-gateways-settings", gateway_type=F["gateway_type"]),
+    Button(
+        text=I18nFormat("btn-gateway.h2h-toggle", is_active=F["h2h_enabled"]),
+        id="anore_h2h_toggle",
+        on_click=on_anore_h2h_toggle,
+        when=F["is_anore"],
+    ),
     Row(
         Select(
             text=I18nFormat("btn-gateway.display-name"),
