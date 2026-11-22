@@ -1,5 +1,6 @@
 import uuid
 from dataclasses import dataclass
+from decimal import Decimal
 from uuid import UUID
 
 from loguru import logger
@@ -259,7 +260,11 @@ class CreateTestPayment(Interactor[PaymentGatewayType, PaymentResultDto]):
         gateway_instance = await self.get_payment_gateway_instance.system(gateway_type)
         i18n = self.translator_hub.get_translator_by_locale(actor.language)
 
-        test_pricing = PriceDetailsDto.test()
+        test_pricing = (
+            PriceDetailsDto.test(Decimal(30))
+            if gateway_type == PaymentGatewayType.ANORE
+            else PriceDetailsDto.test()
+        )
         test_plan_snapshot = PlanSnapshotDto.test()
 
         gateway_instance.payer = actor

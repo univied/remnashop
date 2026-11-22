@@ -20,11 +20,11 @@ class PriceDetailsDto(TrackableMixin):
         return self.final_amount == 0
 
     @classmethod
-    def test(cls) -> Self:
+    def test(cls, amount: Decimal = Decimal(2)) -> Self:
         return cls(
-            original_amount=Decimal(2),
+            original_amount=amount,
             discount_percent=0,
-            final_amount=Decimal(2),
+            final_amount=amount,
         )
 
 
