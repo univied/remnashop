@@ -54,6 +54,9 @@ class AnoreGateway(BasePaymentGateway):
             raise ValueError("Invalid Anore payment amount")
 
         identity = self._get_identity(user)
+        receipt_email = identity["value"]
+        if identity["type"] == "telegram_id":
+            receipt_email = f"{receipt_email}@telegram.org"
         redirect_url = await self._get_bot_redirect_url()
         payload = {
             "amount": amount,
@@ -62,6 +65,7 @@ class AnoreGateway(BasePaymentGateway):
             "shopId": self._shop_id,
             "orderId": str(uuid4()),
             "user_identity": identity,
+            "email": receipt_email,
             "getbackurl": redirect_url,
             "successurl": redirect_url,
             "failurl": redirect_url,

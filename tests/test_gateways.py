@@ -362,6 +362,7 @@ async def test_anore_payer_and_h2h(enabled: bool, sbp_url: str | None, direct: b
         "value": "123",
         "telegram_username": "buyer",
     }
+    assert body["email"] == "123@telegram.org"
     assert "franchise" not in body
     assert body.get("methods") == (["sbp"] if enabled else None)
     assert result.id == ORDER_UUID
@@ -404,6 +405,7 @@ async def test_anore_verified_email_and_franchise() -> None:
     )
     body = json.loads(sent[0].content)
     assert body["user_identity"] == {"type": "email", "value": "buyer@example.com"}
+    assert body["email"] == "buyer@example.com"
     assert body["franchise"] == {
         "type": "telegram_bot",
         "address": "branchbot",
